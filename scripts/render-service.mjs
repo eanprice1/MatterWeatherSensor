@@ -71,7 +71,9 @@ if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.ar
     const template = fs.readFileSync(new URL('../systemd/outdoor-matter-sensor.service', import.meta.url), 'utf8');
     const rendered = renderService(template, selection);
     // Before installation /opt does not exist. Check the same unit using the staged executable.
-    const verification = rendered.replace(/^WorkingDirectory=.*$/m, `WorkingDirectory=${systemdArgument(project)}`)
+    // WorkingDirectory treats quotes as pathname characters; ExecStart needs quoted arguments.
+    const directory = project.replaceAll('\\', '\\\\').replaceAll('%', '%%');
+    const verification = rendered.replace(/^WorkingDirectory=.*$/m, `WorkingDirectory=${directory}`)
       .replace(/^ExecStart=.*$/m, `ExecStart=${systemdArgument(process.execPath)} ${systemdArgument(path.join(project, 'src/sensor.mjs'))}`);
     for (const filename of [options['--output'], options['--verify-output']]) {
       if (!path.isAbsolute(filename) || fs.existsSync(filename)) throw new Error('Render targets must be new absolute paths');

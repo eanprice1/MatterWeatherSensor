@@ -275,7 +275,31 @@ Range-entry starters react to transitions, rather than every weather fetch. Init
 
 ### Updates and removal
 
-Do not run the fresh installer over an existing deployment. An automated update/rollback procedure is not provided. Plan and back up an existing deployment before applying new code, preserving its configuration and live pairing state. Never replace live Matter state with an old backup as a routine code rollback.
+Do not run the fresh installer over an existing deployment. An automated update/rollback procedure is not provided. Converting an existing file-based installation into a Git checkout requires a separate, backed-up migration; `git pull` cannot perform that conversion.
+
+For an installation already running from a **root-owned Git checkout** of this repository on `main`, ordinary code-only updates can use the following commands after reviewing the incoming changes and confirming a clean working tree:
+
+```sh
+sudo git -C /opt/outdoor-matter-sensor status --short
+sudo git -C /opt/outdoor-matter-sensor fetch origin main
+sudo git -C /opt/outdoor-matter-sensor diff HEAD..origin/main -- package.json package-lock.json systemd/ src/state.mjs src/weather.mjs
+```
+
+Review the complete incoming change as well, especially any changes to persistent data formats or update instructions. If a manifest changes, stop and check whether dependency or runtime work is required. For a reviewed code-only change with compatible persisted state:
+
+```sh
+sudo git -C /opt/outdoor-matter-sensor pull --ff-only origin main
+sudo systemctl restart outdoor-matter-sensor.service
+/opt/outdoor-matter-sensor/bin/sensorctl status
+```
+
+Stop if Git reports local changes, a divergent branch, or an error. Do not force-reset or clean the installation to bypass those checks. Fast-forward-only pulling prevents an automatic merge; it does not validate application compatibility. The restart briefly interrupts reporting. A post-update status should show the expected mode, commissioned/online state, freshness and schedule; also check service health and the next normal weather fetch.
+
+Pull-and-restart is sufficient only when the installed dependencies/runtime, service configuration and persisted data remain compatible. Dependency changes require a separately reviewed lockfile-based installation; runtime changes require a verified runtime update. Tracked systemd templates are not automatically installed into `/etc`, and data migrations need explicit recovery instructions. The staging script refuses an existing runtime and is not an updater.
+
+Keep real configuration and pairing data outside the checkout. The bundled `runtime/` and `node_modules/` remain ignored, root-owned local files; future source commits must not track them. Do not configure GitHub credentials on the Pi for public HTTPS pulls, or change global Git settings to work around ownership checks. Use `sudo git` for a root-owned installation.
+
+Back up before applying new code and retain the previous commit for recovery. Routine code rollback must preserve the current live Matter and weather state; never replace it with an old state backup without a separate recovery investigation.
 
 To disable startup and remove service registration while retaining application, configuration and pairing data:
 
