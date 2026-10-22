@@ -6,7 +6,7 @@ The application runs as a native systemd service and fetches weather every **15 
 
 This is **noncommercial, source-available software** under CC BY-NC-SA 4.0, with separately licensed upstream material. It is an uncertified development device. No credentials, personal location or preconfigured household device selections are supplied.
 
-The core application has previously been exercised on Debian 13 ARM64. **Linux installation and full integration testing of this migrated generic version remain pending.** See [Validation](docs/VALIDATION.md).
+The application has passed **18 tests on Debian 13 ARM64**, including an isolated Matter server, and has been deployed successfully to an existing paired installation. Systemd unit verification also passed. **The complete fresh-install procedure on a clean host remains untested.** See [Validation](docs/VALIDATION.md).
 
 ---
 
@@ -31,7 +31,8 @@ bin/sensorctl        Command-line launcher using the bundled runtime
 scripts/             Staging, installation and verification tools
 systemd/             Generic service template and weather credential drop-in
 test/                Portable checks, mocked weather tests and Linux Matter integration
-examples/            Fictional configuration and notification-only automation
+examples/            Fictional configuration and simple notification example
+automations/         Sanitized temperature-band notification/thermostat templates
 docs/                Validation results and limitations
 LICENSE              CC BY-NC-SA 4.0 for original contributions
 LICENSES/            Upstream license text
@@ -82,7 +83,7 @@ Keep the API key in its dedicated credential file, not in environment variables,
 - Raspberry Pi 4 with a **64-bit ARM Linux** installation, working network access and accurate system time. Native Windows is not supported.
 - Existing systemd with `LoadCredential` support (introduced in systemd 247), an existing non-root service account, and administrative authorization for project installation.
 - Existing utilities: `sh`, `curl`, `tar` with xz/gzip support, `sha256sum`, `grep`, `find`, `id`, `uname`, `ss`, `install`, `cp`, `chmod`, `chown`, `mktemp`, `rm`, `rmdir`, `systemctl`, `systemd-analyze`, `journalctl` and `sudo`/`sudoedit`. Git is optional if obtaining a source archive instead.
-- The staging script installs the approved project-local runtime: **Node.js 24.22.0**, bundled **npm 11.19.1**, Matter.js **0.17.9** and noble dependencies **2.4.0**. It does not change system PATH, repositories or accounts.
+- The staging script installs the pinned project-local runtime: **Node.js 24.22.0**, bundled **npm 11.19.1**, Matter.js **0.17.9** and noble dependencies **2.4.0**. It does not change system PATH, repositories or accounts.
 
 Scripts do not install missing OS utilities, adjust sudo policy or change networking. Resolve missing prerequisites separately before continuing.
 
@@ -101,7 +102,7 @@ The Pi, hub and commissioning phone need suitable local connectivity, IPv6 and m
 
 Normal operation makes approximately **96 calls/day**. Retries also count. The application's rolling 900-attempt/24-hour ceiling is an additional safeguard; it does not count requests from other programs sharing your key or replace the provider's account-level cap.
 
-You also need your location's latitude/longitude, supplied privately. The example coordinates are fictional placeholders, not location detection. No automatic address lookup is performed.
+You also need your location's latitude/longitude, supplied privately. Obtain decimal-degree coordinates from a map: latitude must be between -90 and 90, longitude between -180 and 180; south and west use negative values. The example coordinates are placeholders, not location detection. No automatic address lookup is performed, and the configuration does not accept a street address.
 
 ---
 
@@ -128,7 +129,7 @@ tar -xzf MatterWeatherSensor-source.tar.gz
 cd MatterWeatherSensor-main
 ```
 
-These commands will work after the source has been published. This migration does not itself publish changes or create a release.
+Review the revision you intend to install. The `main` branch can change; keep the selected commit SHA with your private deployment records.
 
 ### 2. Stage the pinned runtime and dependencies
 
@@ -151,6 +152,8 @@ sudo sh scripts/install.sh --user YOUR_EXISTING_USER --interface YOUR_INTERFACE
 ```
 
 Both arguments are required. The installer validates the account, derives its existing primary group, checks the interface has an address, renders the unit and runs systemd preflight verification using the staged executable before writing installation destinations. It never creates users/groups or changes privileges. It installs and enables the service, initially in **simulated mode at 68°F / 20°C**.
+
+The fresh installer copies application files into `/opt/outdoor-matter-sensor`; it does not copy `.git` or create a Git-managed installation there. Pulling changes in your separate source checkout does not update the installed copy. See [Updates and removal](#updates-and-removal) for the distinction and compatible Git-managed update workflow.
 
 Keep the staging directory until setup is complete. Do not install the placeholder-filled tracked unit directly.
 
@@ -178,7 +181,15 @@ sudoedit /etc/outdoor-matter-sensor/api-key
 
 The file contains only the key, optionally ending with a newline. Do not put it in a shell command, screenshot, Git commit or diagnostic paste. Creation as root with this umask gives mode 0600.
 
-Optionally install `examples/device.env.example` as `/etc/outdoor-matter-sensor/device.env`, owned by root and the service group with mode 0640, and edit it for your display names/identifiers **before commissioning**. These metadata settings must match the Developer Console integration where applicable.
+Optionally set display names and identifiers **before commissioning**:
+
+```sh
+sudo install -o root -g YOUR_SERVICE_GROUP -m 0640 \
+  examples/device.env.example /etc/outdoor-matter-sensor/device.env
+sudoedit /etc/outdoor-matter-sensor/device.env
+```
+
+These metadata settings must match the Developer Console integration where applicable. The following service restart loads the edited file. Keep it outside the source checkout.
 
 Install the project's credential drop-in and restart this project service:
 
@@ -226,7 +237,9 @@ This repository supports one service/device per host by default; multiple-instan
 
 ## Operation
 
-Run the CLI as the selected service account (or using your existing administrative access):
+Run the CLI as the selected service account (or using your existing administrative access).
+
+If you are logged in as a different account, prefix CLI commands with `sudo -u YOUR_EXISTING_USER`, using the account selected during installation. The private socket is intentionally inaccessible to unrelated users.
 
 ```sh
 /opt/outdoor-matter-sensor/bin/sensorctl status
@@ -272,6 +285,8 @@ sudo systemctl start outdoor-matter-sensor.service
 [The example YAML](examples/temperature-notification.yaml) sends a notification when a fictional sensor enters a temperature range. Select your own device and household member using Script Editor autocomplete, Validate, then save. Numeric temperature comparisons use `40F`, while descriptive text can use `40°F`.
 
 Range-entry starters react to transitions, rather than every weather fetch. Initial activation, reconnect and unavailable recovery need testing. Child-rule names do not guarantee distinct Activity titles; separate scripts with descriptive top-level metadata names can make history clearer. No household thermostat thresholds or equipment commands are included in the example.
+
+For the complete six-band layout, see [the automation templates](automations/README.md). They include a combined notification-only reference and six separate routines that set thermostat mode/temperature and notify. All device and recipient selections are fictional placeholders; replace them using Script Editor autocomplete and validate each routine before use. The example targets are configurable preferences. The separate routines can operate real HVAC equipment once configured and enabled.
 
 ### Updates and removal
 
@@ -341,6 +356,8 @@ Original contributions are licensed under the **Creative Commons Attribution-Non
 ## Security
 
 Never commit real API keys, addresses/coordinates, SSH credentials, onboarding QR codes or Matter pairing state. Keep the API key root-only and use systemd credentials. `.gitignore` is a safeguard, not a substitute for reviewing files before publishing. Share diagnostics only after checking them for private values; report security issues privately rather than posting credentials in an issue.
+
+Git commit author names and email addresses are also public metadata when commits are published. Choose the public identity you intend to expose before committing; excluding a value from source files does not remove it from existing commit metadata or history.
 
 ## Contact
 

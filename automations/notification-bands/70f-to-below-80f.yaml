@@ -1,0 +1,29 @@
+# Save this complete file as its OWN Google Home Script Editor automation.
+# Disable the combined routine before enabling these six separate routines.
+# Sets Example Thermostat - Example Room and sends a notification.
+# Temperature comparisons use the reported outdoor measurement.
+
+metadata:
+  name: Outdoor 70°F to below 80°F - target Cool 69°F
+  description: When Outdoor Temperature Sensor in Example Room enters 70°F to below 80°F, set Example Thermostat - Example Room to Cool at 69°F and send a notification.
+
+automations:
+  - name: Outdoor 70°F to below 80°F - target Cool 69°F
+    starters:
+      - type: device.state.TemperatureSetting
+        device: Outdoor Temperature Sensor - Example Room
+        state: thermostatTemperatureAmbient
+        greaterThanOrEqualTo: 70F
+        lessThan: 80F
+    actions:
+      - type: device.command.ThermostatSetMode
+        devices: Example Thermostat - Example Room
+        thermostatMode: cool
+      - type: device.command.ThermostatTemperatureSetpoint
+        devices: Example Thermostat - Example Room
+        thermostatTemperatureSetpoint: 69F
+      - type: home.command.Notification
+        title: Outdoor temperature - 70°F to below 80°F
+        body: "Entered the 70°F-to-below-80°F band. Target rule for Example Thermostat - Example Room: Cool at 69°F."
+        members:
+          - example-member@example.invalid

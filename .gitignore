@@ -4,6 +4,8 @@ runtime/
 .npm-cache/
 *.tar.xz
 *.tar.gz
+*.tar
+*.tgz
 *.zip
 SHASUMS256.txt
 
@@ -24,8 +26,19 @@ test-state/
 local/
 generated/
 backups/
+secrets/
+credentials/
+credentials.json
+.ssh/
+.npmrc
+.netrc
+id_rsa*
+id_ed25519*
+*.bak
+*.backup
 *.sock
 *.log
 *.pem
 *.key
 *.p12
+*.pfx

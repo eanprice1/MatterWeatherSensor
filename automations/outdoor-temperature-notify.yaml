@@ -1,0 +1,103 @@
+# Combined reference: separate Google Home routines are in notification-bands/.
+# Per-rule names may not appear as separate routine titles in Activity; use separate scripts.
+# Disable this combined routine before enabling the six separate routines.
+
+# Paste into Google Home's Script Editor.
+# Replace the fictional device and recipient selections using autocomplete before use.
+# Sensor format: Device name - Room name
+# Member format: select your household member from autocomplete.
+# Runs on temperature-band entry; no hourly schedule or thermostat commands.
+# Bounds apply to the reported temperature, which can differ from the rounded display.
+
+metadata:
+  name: Outdoor temperature bands - notification test
+  description: Notify when outdoor temperature enters one of the six target bands and describe the corresponding planned thermostat setting.
+
+automations:
+  # 80°F and above -> planned Cool 68°F.
+  - name: Outdoor 80°F and above - target Cool 68°F
+    starters:
+      - type: device.state.TemperatureSetting
+        device: Outdoor Temperature Sensor - Example Room
+        state: thermostatTemperatureAmbient
+        greaterThanOrEqualTo: 80F
+    actions:
+      - type: home.command.Notification
+        title: Outdoor temperature - 80°F or higher
+        body: "Entered the 80°F-or-higher band. Target rule: Cool at 68°F. Notification test only."
+        members:
+          - example-member@example.invalid
+
+  # 70°F inclusive to 80°F exclusive -> planned Cool 69°F.
+  - name: Outdoor 70°F to below 80°F - target Cool 69°F
+    starters:
+      - type: device.state.TemperatureSetting
+        device: Outdoor Temperature Sensor - Example Room
+        state: thermostatTemperatureAmbient
+        greaterThanOrEqualTo: 70F
+        lessThan: 80F
+    actions:
+      - type: home.command.Notification
+        title: Outdoor temperature - 70°F to below 80°F
+        body: "Entered the 70°F-to-below-80°F band. Target rule: Cool at 69°F. Notification test only."
+        members:
+          - example-member@example.invalid
+
+  # 60°F inclusive to 70°F exclusive -> planned Cool 70°F (intentional).
+  - name: Outdoor 60°F to below 70°F - target Cool 70°F
+    starters:
+      - type: device.state.TemperatureSetting
+        device: Outdoor Temperature Sensor - Example Room
+        state: thermostatTemperatureAmbient
+        greaterThanOrEqualTo: 60F
+        lessThan: 70F
+    actions:
+      - type: home.command.Notification
+        title: Outdoor temperature - 60°F to below 70°F
+        body: "Entered the 60°F-to-below-70°F band. Target rule: Cool at 70°F. Notification test only."
+        members:
+          - example-member@example.invalid
+
+  # 40°F inclusive to 60°F exclusive -> planned Heat 70°F.
+  - name: Outdoor 40°F to below 60°F - target Heat 70°F
+    starters:
+      - type: device.state.TemperatureSetting
+        device: Outdoor Temperature Sensor - Example Room
+        state: thermostatTemperatureAmbient
+        greaterThanOrEqualTo: 40F
+        lessThan: 60F
+    actions:
+      - type: home.command.Notification
+        title: Outdoor temperature - 40°F to below 60°F
+        body: "Entered the 40°F-to-below-60°F band. Target rule: Heat at 70°F. Notification test only."
+        members:
+          - example-member@example.invalid
+
+  # 20°F inclusive to 40°F exclusive -> planned Heat 71°F.
+  - name: Outdoor 20°F to below 40°F - target Heat 71°F
+    starters:
+      - type: device.state.TemperatureSetting
+        device: Outdoor Temperature Sensor - Example Room
+        state: thermostatTemperatureAmbient
+        greaterThanOrEqualTo: 20F
+        lessThan: 40F
+    actions:
+      - type: home.command.Notification
+        title: Outdoor temperature - 20°F to below 40°F
+        body: "Entered the 20°F-to-below-40°F band. Target rule: Heat at 71°F. Notification test only."
+        members:
+          - example-member@example.invalid
+
+  # Below 20°F -> planned Heat 72°F.
+  - name: Outdoor below 20°F - target Heat 72°F
+    starters:
+      - type: device.state.TemperatureSetting
+        device: Outdoor Temperature Sensor - Example Room
+        state: thermostatTemperatureAmbient
+        lessThan: 20F
+    actions:
+      - type: home.command.Notification
+        title: Outdoor temperature - below 20°F
+        body: "Entered the below-20°F band. Target rule: Heat at 72°F. Notification test only."
+        members:
+          - example-member@example.invalid

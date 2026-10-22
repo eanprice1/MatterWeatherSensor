@@ -22,10 +22,10 @@ if [ -n "$(ss -H -lun 'sport = :5540')$(ss -H -ltn 'sport = :5540')" ]; then
 fi
 [ "$(runtime/bin/node --version)" = v24.22.0 ]
 [ "$(runtime/bin/node runtime/lib/node_modules/npm/bin/npm-cli.js --version)" = 11.19.1 ]
-for entry in src bin scripts systemd test examples docs LICENSES package.json package-lock.json README.md NOTICE.md LICENSE; do
+for entry in src bin scripts systemd test examples automations docs LICENSES package.json package-lock.json README.md NOTICE.md LICENSE; do
   [ -e "$entry" ] || { echo "Missing application payload: $entry" >&2; exit 1; }
 done
-[ -z "$(find src bin scripts systemd test examples docs LICENSES -type l -print)" ] || { echo 'Application payload must not contain symlinks.' >&2; exit 1; }
+[ -z "$(find src bin scripts systemd test examples automations docs LICENSES -type l -print)" ] || { echo 'Application payload must not contain symlinks.' >&2; exit 1; }
 runtime/bin/node scripts/verify-dependencies.mjs
 for source in src/*.mjs scripts/*.mjs; do runtime/bin/node --check "$source"; done
 umask 077
@@ -36,7 +36,7 @@ systemd-analyze verify "$check_dir/verify.service"
 # All account, interface, runtime and unit checks happen before writing installation destinations.
 umask 022
 install -d -m 0755 "$target"
-cp -R runtime node_modules src bin scripts systemd test examples docs LICENSES package.json package-lock.json README.md NOTICE.md LICENSE "$target/"
+cp -R runtime node_modules src bin scripts systemd test examples automations docs LICENSES package.json package-lock.json README.md NOTICE.md LICENSE "$target/"
 chown -R root:root "$target"
 chmod -R go-w "$target"
 chmod 0755 "$target/bin/sensorctl"
