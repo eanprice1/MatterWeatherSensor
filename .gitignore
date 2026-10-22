@@ -1,0 +1,31 @@
+# Installed runtime/dependencies and download caches
+node_modules/
+runtime/
+.npm-cache/
+*.tar.xz
+*.tar.gz
+*.zip
+SHASUMS256.txt
+
+# Local configuration, credentials, generated units and pairing state
+.env
+.env.*
+!.env.example
+api-key
+api-key.*
+weather.json
+device.env
+identity.json
+reading.json
+weather-state.json
+matter/
+state/
+test-state/
+local/
+generated/
+backups/
+*.sock
+*.log
+*.pem
+*.key
+*.p12

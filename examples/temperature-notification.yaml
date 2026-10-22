@@ -1,0 +1,17 @@
+# Google Home Script Editor example; replace device/recipient using autocomplete.
+# Notification only: does not change thermostat mode or setpoint.
+metadata:
+  name: Outdoor temperature below 40°F
+  description: Notify when the example outdoor sensor enters the below-40°F range.
+automations:
+  - starters:
+      - type: device.state.TemperatureSetting
+        device: Outdoor Temperature Sensor - Example Room
+        state: thermostatTemperatureAmbient
+        lessThan: 40F
+    actions:
+      - type: home.command.Notification
+        title: Outdoor temperature below 40°F
+        body: The outdoor sensor entered the below-40°F range.
+        members:
+          - example-member@example.invalid

@@ -1,0 +1,35 @@
+[Unit]
+Description=MatterWeatherSensor outdoor temperature service
+After=network.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+User=@SERVICE_USER@
+Group=@SERVICE_GROUP@
+WorkingDirectory=/opt/outdoor-matter-sensor
+ExecStart=/opt/outdoor-matter-sensor/runtime/bin/node /opt/outdoor-matter-sensor/src/sensor.mjs
+Environment=OTM_STATE_DIR=/var/lib/outdoor-matter-sensor
+Environment=OTM_SOCKET_PATH=/run/outdoor-matter-sensor/control.sock
+Environment=OTM_INTERFACE=@NETWORK_INTERFACE@
+EnvironmentFile=-/etc/outdoor-matter-sensor/device.env
+StateDirectory=outdoor-matter-sensor
+StateDirectoryMode=0700
+RuntimeDirectory=outdoor-matter-sensor
+RuntimeDirectoryMode=0700
+UMask=0077
+Restart=on-failure
+RestartSec=10
+TimeoutStopSec=15
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+CapabilityBoundingSet=
+RestrictSUIDSGID=yes
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=outdoor-matter-sensor
+
+[Install]
+WantedBy=multi-user.target
