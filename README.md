@@ -2,6 +2,45 @@
 
 MatterWeatherSensor publishes OpenWeather's current outdoor temperature as a virtual **Matter Temperature Sensor** on a Raspberry Pi. Pair it with Google Home to display readings or use them in household automations.
 
+## TLDR
+
+For a **fresh installation**. The application is tested; the complete clean-host installer remains untested. [Validation details](docs/VALIDATION.md).
+
+1. **Have the prerequisites:** a Raspberry Pi 4 with 64-bit Linux/systemd, an existing non-root account, internet access, a supported Google Home Matter hub, and an Android phone. Your LAN needs IPv6 and device discovery. [Prerequisites](#prerequisites).
+2. **Get weather access:** create an OpenWeather account, subscribe to One Call API with **4.0** access, obtain an API key, and set its daily limit to **1,000 calls** to stay within the free allowance. Get your location's decimal latitude/longitude.
+3. **Create the Google integration:** use the Google Home Developer Console, preferably with your Google Home account. Choose **Sensor**, VID **`0xFFF1`**, and PID **`0x8000`**. [Console setup](#google-developer-console-and-commissioning).
+4. **Install on the Pi**, replacing the account/interface placeholders:
+
+   ```sh
+   git clone https://github.com/eanprice1/MatterWeatherSensor.git
+   cd MatterWeatherSensor
+   sh scripts/stage.sh
+   sudo sh scripts/install.sh --user YOUR_EXISTING_USER --interface YOUR_INTERFACE
+   ```
+
+5. **Configure private weather access:** follow the [configuration commands](#production-deployment-and-weather-credentials) to create `/etc/outdoor-matter-sensor/weather.json` with your coordinates and the root-only, mode-0600 `api-key` file. Optionally customize `device.env`. Keep these files outside Git.
+6. **Load the API credential and restart** from the source directory:
+
+   ```sh
+   sudo install -d -m 0755 /etc/systemd/system/outdoor-matter-sensor.service.d
+   sudo install -m 0644 systemd/weather.conf /etc/systemd/system/outdoor-matter-sensor.service.d/weather.conf
+   sudo systemctl daemon-reload
+   sudo systemctl restart outdoor-matter-sensor.service
+   ```
+
+7. **Pair with Google Home:** as the selected service account, run `/opt/outdoor-matter-sensor/bin/sensorctl pairing`, then add a Matter device in Google Home using its QR/manual code. Confirm the initial **68°F / 20°C** reading.
+8. **Switch to real weather** as the selected service account:
+
+   ```sh
+   /opt/outdoor-matter-sensor/bin/sensorctl mode weather
+   /opt/outdoor-matter-sensor/bin/sensorctl status
+   ```
+
+   Confirm a successful fetch and the reading in Google Home. The service starts automatically at boot and fetches every **15 minutes**.
+9. **Optional:** customize the [automation templates](automations/README.md), replace their fictional device/member selections, and validate/save them in Google Home. The thermostat routines can control real equipment.
+
+---
+
 The application runs as a native systemd service and fetches weather every **15 minutes**. A separate simulated mode supports commissioning and controlled testing. The Pi publishes temperature; your smart-home platform owns automation actions.
 
 This is **noncommercial, source-available software** under CC BY-NC-SA 4.0, with separately licensed upstream material. It is an uncertified development device. No credentials, personal location or preconfigured household device selections are supplied.
